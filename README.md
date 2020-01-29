@@ -15,3 +15,6 @@ If you are running Windows
 If you want to install all the necessary packages run this command:
 
 `pip install -r requirements.txt`
+
+
+Data downloaded from https://www.kaggle.com/kmader/skin-cancer-mnist-ham10000

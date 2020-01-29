@@ -11,7 +11,7 @@ def draw_image(numpy_3d_array):
 
 def main():
     X_data, y_data = read_file("data/skin/hmnist_28_28_RGB.csv")
-
+    # draw_image(X_data[0])
     X_train, y_train, X_val, y_val, X_test, y_test = split_data(X_data, y_data)
     model = models.Sequential()
     # TODO: tweak these hyperparams.
