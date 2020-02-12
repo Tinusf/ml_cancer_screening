@@ -1,4 +1,4 @@
-from tensorflow.keras import layers, models, preprocessing
+from tensorflow.keras import layers, models, preprocessing, backend as K
 from data_loader import read_file, split_data
 from PIL import Image
 import numpy as np
@@ -17,6 +17,10 @@ def shuffle_data(a, b):
     return a[p], b[p]
 
 
+def swish(x):
+    return (K.sigmoid(x) * x)
+
+
 def create_and_train_model(X_train, y_train, save=True):
     """
     :param X_train: The features that should be trained on.
@@ -27,18 +31,18 @@ def create_and_train_model(X_train, y_train, save=True):
     model = models.Sequential()
     # TODO: tweak these hyperparams.
     model.add(
-        layers.Conv2D(filters=28, kernel_size=(3, 3), activation='tanh', input_shape=(28, 28, 3)))
+        layers.Conv2D(filters=28, kernel_size=(3, 3), activation=swish, input_shape=(28, 28, 3)))
     model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.Conv2D(56, (3, 3), activation='tanh'))
+    model.add(layers.Conv2D(56, (3, 3), activation=swish))
     model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.Conv2D(112, (3, 3), activation='tanh'))
+    model.add(layers.Conv2D(112, (3, 3), activation=swish))
     model.add(layers.Flatten())
-    model.add(layers.Dense(64, activation='relu'))
-    model.add(layers.Dense(64, activation='relu'))
+    # model.add(layers.Dense(64, activation='relu'))
+    # model.add(layers.Dense(64, activation='relu'))
     model.add(layers.Dense(256, activation='relu'))
-    model.add(layers.Dense(128, activation='relu'))
-    model.add(layers.Dense(512, activation='tanh'))
-    model.add(layers.Dense(64, activation='tanh'))
+    # model.add(layers.Dense(128, activation=swish))
+    model.add(layers.Dense(512, activation=swish))
+    # model.add(layers.Dense(64, activation=swish))
     model.add(layers.Dense(7, activation='softmax'))
 
     model.compile(optimizer='adam',
