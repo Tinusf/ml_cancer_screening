@@ -3,6 +3,8 @@ from data_loader import read_file, split_data
 from PIL import Image
 import numpy as np
 
+USE_SAVED_MODEL = True
+
 
 def draw_image(numpy_3d_array):
     im = Image.fromarray(numpy_3d_array.astype(np.uint8))
@@ -15,12 +17,13 @@ def shuffle_data(a, b):
     return a[p], b[p]
 
 
-def main():
-    X_data, y_data = read_file("data/skin/hmnist_28_28_RGB.csv")
-    X_data, y_data = shuffle_data(X_data, y_data)
-    # y_data = np.array([1 if y in [1,5,6] else 0 for y in y_data])
-    # draw_image(X_data[0])
-    X_train, y_train, X_val, y_val, X_test, y_test = split_data(X_data, y_data)
+def create_and_train_model(X_train, y_train, save=True):
+    """
+    :param X_train: The features that should be trained on.
+    :param y_train: The labels
+    :param save: True if the newly trained model should be saved.
+    :return: The newly trained model.
+    """
     model = models.Sequential()
     # TODO: tweak these hyperparams.
     model.add(
@@ -54,9 +57,23 @@ def main():
         validation_split=0.05)
 
     datagen.fit(X_train)
-
     model.fit(datagen.flow(X_train, y_train, batch_size=128),
               steps_per_epoch=len(X_train) / 128, epochs=150)
+    if save:
+        model.save("saved_model.h5")
+    return model
+
+
+def main():
+    X_data, y_data = read_file("data/skin/hmnist_28_28_RGB.csv")
+    X_data, y_data = shuffle_data(X_data, y_data)
+    # y_data = np.array([1 if y in [1,5,6] else 0 for y in y_data])
+    # draw_image(X_data[0])
+    X_train, y_train, X_val, y_val, X_test, y_test = split_data(X_data, y_data)
+    if USE_SAVED_MODEL:
+        model = models.load_model("saved_model.h5")
+    else:
+        model = create_and_train_model(X_train, y_train)
 
     test_loss, test_acc = model.evaluate(X_test, y_test, verbose=2)
 
