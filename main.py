@@ -62,7 +62,7 @@ def create_and_train_model(X_train, y_train, save=True):
 
     datagen.fit(X_train)
     model.fit(datagen.flow(X_train, y_train, batch_size=128),
-              steps_per_epoch=len(X_train) / 128, epochs=150)
+              steps_per_epoch=len(X_train) / 128, epochs=50)
     if save:
         model.save("saved_model.h5")
     return model
