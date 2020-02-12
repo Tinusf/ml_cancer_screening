@@ -21,13 +21,7 @@ def swish(x):
     return (K.sigmoid(x) * x)
 
 
-def create_and_train_model(X_train, y_train, save=True):
-    """
-    :param X_train: The features that should be trained on.
-    :param y_train: The labels
-    :param save: True if the newly trained model should be saved.
-    :return: The newly trained model.
-    """
+def get_model():
     model = models.Sequential()
     # TODO: tweak these hyperparams.
     model.add(
@@ -49,6 +43,18 @@ def create_and_train_model(X_train, y_train, save=True):
                   loss='sparse_categorical_crossentropy',
                   metrics=['accuracy'])
 
+    return model
+
+
+def create_and_train_model(X_train, y_train, save=True):
+    """
+    :param X_train: The features that should be trained on.
+    :param y_train: The labels
+    :param save: True if the newly trained model should be saved.
+    :return: The newly trained model.
+    """
+    model = get_model()
+
     datagen = preprocessing.image.ImageDataGenerator(
         rotation_range=360,
         width_shift_range=0.2,
@@ -64,12 +70,14 @@ def create_and_train_model(X_train, y_train, save=True):
     model.fit(datagen.flow(X_train, y_train, batch_size=128),
               steps_per_epoch=len(X_train) / 128, epochs=50)
     if save:
-        model.save("saved_model.h5")
+        model.save_weights("saved_model.h5")
     return model
 
 
 def get_saved_model():
-    return models.load_model("saved_model.h5")
+    model = get_model()
+    model.load_weights("saved_model.h5")
+    return model
 
 
 def predict(model, X_values):

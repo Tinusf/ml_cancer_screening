@@ -10,6 +10,7 @@ import main
 
 app = Flask(__name__)
 CORS(app)
+model = main.get_saved_model()
 
 
 def base64_to_numpy(base64string):
@@ -30,7 +31,6 @@ def base64_to_numpy(base64string):
 def hello_world():
     json_input_data = json.loads(request.data)
     pixels = base64_to_numpy(json_input_data["data"])
-    model = main.get_saved_model()
     predicted = main.predict(model, np.array([pixels]))
 
     print(pixels)
