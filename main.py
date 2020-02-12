@@ -1,5 +1,6 @@
 from tensorflow.keras import layers, models, preprocessing
 from data_loader import read_file, split_data
+from keras import backend as K
 from PIL import Image
 import numpy as np
 
@@ -14,28 +15,28 @@ def shuffle_data(a, b):
     p = np.random.permutation(len(a))
     return a[p], b[p]
 
+def swish(x):
+    return (K.sigmoid(x) * x)
 
 def main():
     X_data, y_data = read_file("data/skin/hmnist_28_28_RGB.csv")
     X_data, y_data = shuffle_data(X_data, y_data)
     # y_data = np.array([1 if y in [1,5,6] else 0 for y in y_data])
-    # draw_image(X_data[0])
     X_train, y_train, X_val, y_val, X_test, y_test = split_data(X_data, y_data)
     model = models.Sequential()
     # TODO: tweak these hyperparams.
-    model.add(
-        layers.Conv2D(filters=28, kernel_size=(3, 3), activation='tanh', input_shape=(28, 28, 3)))
+    model.add(layers.Conv2D(filters=28, kernel_size=(3, 3), activation=swish, input_shape=(28, 28, 3)))
     model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.Conv2D(56, (3, 3), activation='tanh'))
+    model.add(layers.Conv2D(56, (3, 3), activation=swish))
     model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.Conv2D(112, (3, 3), activation='tanh'))
+    model.add(layers.Conv2D(112, (3, 3), activation=swish))
     model.add(layers.Flatten())
-    model.add(layers.Dense(64, activation='relu'))
-    model.add(layers.Dense(64, activation='relu'))
+    #model.add(layers.Dense(64, activation='relu'))
+    #model.add(layers.Dense(64, activation='relu'))
     model.add(layers.Dense(256, activation='relu'))
-    model.add(layers.Dense(128, activation='relu'))
-    model.add(layers.Dense(512, activation='tanh'))
-    model.add(layers.Dense(64, activation='tanh'))
+    #model.add(layers.Dense(128, activation=swish))
+    model.add(layers.Dense(512, activation=swish))
+    #model.add(layers.Dense(64, activation=swish))
     model.add(layers.Dense(7, activation='softmax'))
 
     model.compile(optimizer='adam',
