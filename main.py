@@ -68,6 +68,14 @@ def create_and_train_model(X_train, y_train, save=True):
     return model
 
 
+def get_saved_model():
+    return models.load_model("saved_model.h5")
+
+
+def predict(model, X_values):
+    return model.predict(X_values).squeeze()
+
+
 def main():
     X_data, y_data = read_file("data/skin/hmnist_28_28_RGB.csv")
     X_data, y_data = shuffle_data(X_data, y_data)
@@ -75,7 +83,7 @@ def main():
     # draw_image(X_data[0])
     X_train, y_train, X_val, y_val, X_test, y_test = split_data(X_data, y_data)
     if USE_SAVED_MODEL:
-        model = models.load_model("saved_model.h5")
+        model = get_saved_model()
     else:
         model = create_and_train_model(X_train, y_train)
 
