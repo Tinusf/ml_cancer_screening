@@ -1,10 +1,9 @@
 from tensorflow.keras import layers, models, preprocessing, backend as K
 from tensorflow.keras.models import load_model
-from keras.utils.generic_utils import get_custom_objects
+from tensorflow.keras.utils import get_custom_objects
 from data_loader import read_file, split_data
 from PIL import Image
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 
 USE_SAVED_MODEL = True
@@ -102,9 +101,6 @@ def predict(model, X_values):
 
 
 def performance(history):
-    if USE_SAVED_MODEL:
-        raise NoModelHistoryError
-
     plt.plot(history.history["accuracy"])
     plt.title("Model accuracy")
     plt.ylabel("accuracy")
