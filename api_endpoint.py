@@ -10,6 +10,7 @@ import main
 
 app = Flask(__name__)
 CORS(app)
+
 model = main.get_saved_model()
 
 
@@ -27,12 +28,22 @@ def base64_to_numpy(base64string):
     return pixels
 
 
+def format_output(predicted):
+    return {
+        "Actinic Keratoses": float(predicted[0]),
+        "Basal cell carcinoma": float(predicted[1]),
+        "Benign keratosis": float(predicted[2]),
+        "Dermatofibroma": float(predicted[3]),
+        "Melanocytic nevi": float(predicted[4]),
+        "Melanoma": float(predicted[5]),
+        "Vascular skin lesions": float(predicted[6])
+    }
+
+
 @app.route('/', methods=["POST"])
-def hello_world():
+def check_image():
     json_input_data = json.loads(request.data)
     pixels = base64_to_numpy(json_input_data["data"])
     predicted = main.predict(model, np.array([pixels]))
 
-    print(pixels)
-    print(pixels.shape)
-    return json.dumps(str(predicted))
+    return json.dumps(format_output(predicted))
