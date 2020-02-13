@@ -5,14 +5,12 @@ import Webcam from "react-webcam";
 
 
 const App = props => {
-  console.log(props)
-  console.log("ræv")
   let results = "testy";
 
   const changeResults = props.changeResults;
 
   async function query(data) {
-    const response = await fetch("http://localhost:8080", {
+    const response = await fetch("https://skinflask.tinusf.com/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
