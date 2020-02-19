@@ -35,6 +35,7 @@ const App = props => {
   return (
     <div>
       <Webcam
+        className="webcam"
         audio={false}
         width={1280}
         height={720}
