@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import logo from './logo.svg';
 import './App.css';
 import Webcam from "react-webcam";
-
 
 const App = props => {
   let results = "testy";
@@ -50,7 +48,7 @@ const App = props => {
       <p>
         Check for skin cancer!
         </p>
-      <button onClick={capture}>Capture</button>
+      <button className="large green button" onClick={capture}>Capture</button>
     </div>
   );
 }
