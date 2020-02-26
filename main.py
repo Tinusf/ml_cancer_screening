@@ -7,15 +7,17 @@ from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import defaultdict
+from sklearn.metrics import classification_report, confusion_matrix
+from tensorflow.keras.applications.densenet import DenseNet121
 
 # Load the model saved to file instead of creating a new.
 USE_SAVED_MODEL = False
 DEBUG = False
 # How many epochs
-EPOCHS = 200
+EPOCHS = 25
 BATCH_SIZE = 128
 # Class weighting, in order to counter the effects of the inbalanced data.
-USE_CLASS_WEIGHTS = True
+USE_CLASS_WEIGHTS = False
 USE_EARLY_STOPPING = False
 
 
@@ -74,14 +76,13 @@ def get_model():
     return model
 
 
-def create_and_train_model(X_train, y_train, save=True):
+def train_model(model, X_train, y_train, save=True):
     """
     :param X_train: The features that should be trained on.
     :param y_train: The labels
     :param save: True if the newly trained model should be saved.
     :return: The newly trained model.
     """
-    model = get_model()
 
     datagen = preprocessing.image.ImageDataGenerator(
         rotation_range=360,
@@ -108,7 +109,7 @@ def create_and_train_model(X_train, y_train, save=True):
         steps_per_epoch=len(X_train) / BATCH_SIZE,
         epochs=EPOCHS,
         callbacks=es if es is not None else None,
-        class_weight=class_weights
+        class_weight=class_weights if USE_CLASS_WEIGHTS else None
     )
     if save:
         model.save("saved_model.h5")
@@ -148,15 +149,33 @@ def main():
     # y_data = np.array([1 if y in [1,5,6] else 0 for y in y_data])
     # draw_image(X_data[0])
     X_train, y_train, X_val, y_val, X_test, y_test = split_data(X_data, y_data)
+
+
+    # model = DenseNet121(include_top=False, weights='imagenet', input_tensor=None,
+    #                     input_shape=(28, 28, 3), pooling=None, classes=1000)
+    # model.compile(
+    #     optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
+    # )
+
     if USE_SAVED_MODEL:
         model = get_saved_model()
     else:
-        model, history = create_and_train_model(X_train, y_train)
+        model = get_model()
+        model, history = train_model(model, X_train, y_train)
+
+    model, history = train_model(model, X_train, y_train)
 
     test_loss, test_acc = model.evaluate(X_test, y_test, verbose=2)
-
     print("Testing accuracy", test_acc)
     print("Testing loss", test_loss)
+
+    y_pred = model.predict(X_test)
+    # Decode the one-hot vector.
+    y_pred = np.argmax(y_pred, axis=1)
+    print(confusion_matrix(y_true=y_test, y_pred=y_pred))
+    target_names = ['Actinic Keratoses', 'Basal cell carcinoma', 'Benign keratosis',
+                    'Dermatofibroma', 'Melanocytic nevi', 'Melanoma', 'Vascular skin lesions']
+    print(classification_report(y_true=y_test, y_pred=y_pred, target_names=target_names))
 
     if DEBUG:
         performance(history)
