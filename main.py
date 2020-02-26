@@ -2,20 +2,21 @@ from tensorflow.keras import layers, models, preprocessing, backend as K
 from tensorflow.keras.models import load_model
 from tensorflow.keras.utils import get_custom_objects, plot_model
 from tensorflow.keras import callbacks
-from data_loader import read_file
+from data_loader import read_file, save_history, load_history
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import defaultdict
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.applications.densenet import DenseNet121
+
+# from tensorflow.keras.applications.densenet import DenseNet121
 
 # Load the model saved to file instead of creating a new.
-USE_SAVED_MODEL = False
-DEBUG = False
+USE_SAVED_MODEL = True
+DEBUG = True
 # How many epochs
-EPOCHS = 250
+EPOCHS = 10
 BATCH_SIZE = 128
 # Class weighting, in order to counter the effects of the inbalanced data.
 USE_CLASS_WEIGHTS = False
@@ -25,6 +26,7 @@ USE_EARLY_STOPPING = False
 def draw_image(numpy_3d_array):
     im = Image.fromarray(numpy_3d_array.astype(np.uint8))
     im.show()
+
 
 def swish(x):
     return K.sigmoid(x) * x
@@ -93,7 +95,7 @@ def train_model(model, X_train, y_train, save=True):
     class_weights = get_class_weights(y_train)
 
     if USE_EARLY_STOPPING:
-        es = callbacks.EarlyStopping(monitor='accuracy')
+        es = callbacks.EarlyStopping(monitor="accuracy")
     else:
         es = None
 
@@ -103,10 +105,11 @@ def train_model(model, X_train, y_train, save=True):
         steps_per_epoch=len(X_train) / BATCH_SIZE,
         epochs=EPOCHS,
         callbacks=es if es is not None else None,
-        class_weight=class_weights if USE_CLASS_WEIGHTS else None
+        class_weight=class_weights if USE_CLASS_WEIGHTS else None,
     )
     if save:
         model.save("saved_model.h5")
+        save_history(history)
     return model, history
 
 
@@ -114,7 +117,8 @@ def get_saved_model():
     get_custom_objects().update({"swish": layers.Activation(swish)})
     custom_objects = {"swish": swish}
     model = load_model("saved_model.h5", custom_objects)
-    return model
+    history = load_history("latest")
+    return model, history
 
 
 def predict(model, X_values):
@@ -141,7 +145,7 @@ def main():
     X_data, y_data = read_file("data/skin/hmnist_28_28_RGB.csv")
 
     X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.2)
-    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.05);
+    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.05)
 
     # model = DenseNet121(include_top=False, weights='imagenet', input_tensor=None,
     #                     input_shape=(28, 28, 3), pooling=None, classes=1000)
@@ -151,7 +155,7 @@ def main():
     #  model, history = train_model(model, X_train, y_train)
 
     if USE_SAVED_MODEL:
-        model = get_saved_model()
+        model, history = get_saved_model()
     else:
         model = create_model()
         model, history = train_model(model, X_train, y_train)
@@ -166,9 +170,18 @@ def main():
     # Decode the one-hot vector.
     y_pred = np.argmax(y_pred, axis=1)
     print(confusion_matrix(y_true=y_test, y_pred=y_pred))
-    target_names = ['Actinic Keratoses', 'Basal cell carcinoma', 'Benign keratosis',
-                    'Dermatofibroma', 'Melanocytic nevi', 'Melanoma', 'Vascular skin lesions']
-    print(classification_report(y_true=y_test, y_pred=y_pred, target_names=target_names))
+    target_names = [
+        "Actinic Keratoses",
+        "Basal cell carcinoma",
+        "Benign keratosis",
+        "Dermatofibroma",
+        "Melanocytic nevi",
+        "Melanoma",
+        "Vascular skin lesions",
+    ]
+    print(
+        classification_report(y_true=y_test, y_pred=y_pred, target_names=target_names)
+    )
 
     if DEBUG:
         plot_performance(history)
