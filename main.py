@@ -15,12 +15,13 @@ from tensorflow.keras.applications.densenet import DenseNet121
 USE_SAVED_MODEL = False
 DEBUG = False
 # How many epochs
-EPOCHS = 250
+EPOCHS = 10
 BATCH_SIZE = 128
 # Class weighting, in order to counter the effects of the inbalanced data.
 USE_CLASS_WEIGHTS = False
 USE_EARLY_STOPPING = False
 
+VALIDATION_SIZE = 0.05
 
 def draw_image(numpy_3d_array):
     im = Image.fromarray(numpy_3d_array.astype(np.uint8))
@@ -87,7 +88,7 @@ def train_model(model, X_train, y_train, save=True):
         zoom_range=0.1,
         horizontal_flip=True,
         vertical_flip=True,
-        validation_split=0.05,
+        validation_split=VALIDATION_SIZE,
     )
 
     class_weights = get_class_weights(y_train)
@@ -98,10 +99,13 @@ def train_model(model, X_train, y_train, save=True):
         es = None
 
     datagen.fit(X_train)
+
     history = model.fit(
-        datagen.flow(X_train, y_train, batch_size=BATCH_SIZE),
-        steps_per_epoch=len(X_train) / BATCH_SIZE,
+        datagen.flow(X_train, y_train, batch_size=BATCH_SIZE, subset='training'),
+        steps_per_epoch=len(X_train) * (1 - VALIDATION_SIZE) / BATCH_SIZE,
         epochs=EPOCHS,
+        validation_data=datagen.flow(X_train, y_train, batch_size=BATCH_SIZE, subset='validation'),
+        validation_steps=len(X_train) * VALIDATION_SIZE / BATCH_SIZE,
         callbacks=es if es is not None else None,
         class_weight=class_weights if USE_CLASS_WEIGHTS else None
     )
