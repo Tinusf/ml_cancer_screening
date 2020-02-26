@@ -136,3 +136,6 @@ venv/
 
 # Data
 data/
+
+# Model history
+!history/history_latest.csv
