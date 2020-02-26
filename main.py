@@ -15,7 +15,7 @@ from tensorflow.keras.applications.densenet import DenseNet121
 USE_SAVED_MODEL = False
 DEBUG = False
 # How many epochs
-EPOCHS = 250
+EPOCHS = 10
 BATCH_SIZE = 128
 # Class weighting, in order to counter the effects of the inbalanced data.
 USE_CLASS_WEIGHTS = False
@@ -98,10 +98,13 @@ def train_model(model, X_train, y_train, save=True):
         es = None
 
     datagen.fit(X_train)
+
     history = model.fit(
-        datagen.flow(X_train, y_train, batch_size=BATCH_SIZE),
-        steps_per_epoch=len(X_train) / BATCH_SIZE,
+        datagen.flow(X_train, y_train, batch_size=BATCH_SIZE, subset='training'),
+        steps_per_epoch=len(X_train) * 0.95 / BATCH_SIZE,
         epochs=EPOCHS,
+        validation_data=datagen.flow(X_train, y_train, batch_size=BATCH_SIZE, subset='validation'),
+        validation_steps=len(X_train) * 0.05 / BATCH_SIZE,
         callbacks=es if es is not None else None,
         class_weight=class_weights if USE_CLASS_WEIGHTS else None
     )
