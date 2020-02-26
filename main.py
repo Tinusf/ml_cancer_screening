@@ -150,20 +150,17 @@ def main():
     # draw_image(X_data[0])
     X_train, y_train, X_val, y_val, X_test, y_test = split_data(X_data, y_data)
 
-
     # model = DenseNet121(include_top=False, weights='imagenet', input_tensor=None,
     #                     input_shape=(28, 28, 3), pooling=None, classes=1000)
     # model.compile(
     #     optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
     # )
-
+    # model, history = train_model(model, X_train, y_train)
     if USE_SAVED_MODEL:
         model = get_saved_model()
     else:
         model = get_model()
         model, history = train_model(model, X_train, y_train)
-
-    model, history = train_model(model, X_train, y_train)
 
     test_loss, test_acc = model.evaluate(X_test, y_test, verbose=2)
     print("Testing accuracy", test_acc)
