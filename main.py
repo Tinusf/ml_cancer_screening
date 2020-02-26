@@ -84,7 +84,7 @@ def train_model(model, image_folder, save=True):
     :return: The newly trained model.
     """
 
-    datagen = preprocessing.image.ImageDataGenerator(
+    datagen_train = preprocessing.image.ImageDataGenerator(
         rotation_range=360,
         width_shift_range=0.2,
         height_shift_range=0.2,
@@ -93,7 +93,6 @@ def train_model(model, image_folder, save=True):
         zoom_range=0.1,
         horizontal_flip=True,
         vertical_flip=True,
-        validation_split=0.05
     )
 
     # class_weights = get_class_weights(y_train)
@@ -103,24 +102,33 @@ def train_model(model, image_folder, save=True):
     else:
         es = None
 
-    # datagen.fit(X_train)
-    validation_generator = datagen.flow_from_directory(image_folder,
-                                                       subset='validation',
-                                                       shuffle=True)
+    datagen_val = preprocessing.image.ImageDataGenerator()
+    datagen_test = preprocessing.image.ImageDataGenerator()
 
-    train_generator = datagen.flow_from_directory(image_folder,
-                                                  subset='training',
-                                                  shuffle=True)
+    # datagen.fit(X_train)
+    train_generator = datagen_train.flow_from_directory("data/skin/train",
+                                                        # target_size=(600, 450),
+                                                        shuffle=True)
+
+    validation_generator = datagen_val.flow_from_directory("data/skin/validation",
+                                                           shuffle=True)
 
     history = model.fit(
         train_generator,
         # steps_per_epoch=len(X_train) / BATCH_SIZE,
         validation_data=validation_generator,
-        validation_steps=100 * 0.2 / BATCH_SIZE,
-        epochs=30,
+        validation_steps=10015 * 0.05 / BATCH_SIZE,
+        epochs=1,
         callbacks=es if es is not None else None,
         # class_weight=class_weights if USE_CLASS_WEIGHTS else None
     )
+
+    test_generator = datagen_test.flow_from_directory("data/skin/test",
+                                                      shuffle=True)
+
+    lol = model.evaluate_generator(generator=test_generator)
+    print(lol)
+
     if save:
         model.save("saved_model.h5")
     return model, history
