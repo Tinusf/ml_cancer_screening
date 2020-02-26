@@ -13,15 +13,6 @@ def recreate_image(list_of_intensities):
     return list_of_intensities.reshape((28, 28, 3))
 
 
-def split_data(X_data, y_data, train_ratio=0.8, val_ratio=0.0):
-    # Splits the data into training and testing data
-    index_split_train = int(len(X_data) * train_ratio)
-    index_split_val = int(len(X_data) * (train_ratio + val_ratio))
-    return X_data[:index_split_train], y_data[:index_split_train], \
-           X_data[index_split_train:index_split_val], y_data[index_split_train:index_split_val], \
-           X_data[index_split_val:], y_data[index_split_val:]
-
-
 def read_file(file_name):
     # Reads the file and returns two numpy arrays, the first containing the feature-dataset and
     # the second list containing the labels.

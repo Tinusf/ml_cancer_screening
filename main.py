@@ -2,7 +2,7 @@ from tensorflow.keras import layers, models, preprocessing, backend as K
 from tensorflow.keras.models import load_model
 from tensorflow.keras.utils import get_custom_objects, plot_model
 from tensorflow.keras import callbacks
-from data_loader import read_file, split_data
+from data_loader import read_file
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
@@ -25,13 +25,6 @@ USE_EARLY_STOPPING = False
 def draw_image(numpy_3d_array):
     im = Image.fromarray(numpy_3d_array.astype(np.uint8))
     im.show()
-
-
-def shuffle_data(a, b):
-    assert len(a) == len(b)
-    p = np.random.permutation(len(a))
-    return a[p], b[p]
-
 
 def swish(x):
     return K.sigmoid(x) * x
@@ -147,8 +140,6 @@ def plot_performance(history):
 def main():
     X_data, y_data = read_file("data/skin/hmnist_28_28_RGB.csv")
 
-    #X_data, y_data = shuffle_data(X_data, y_data)
-    #  X_train, y_train, X_val, y_val, X_test, y_test = split_data(X_data, y_data)
     X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.2)
     X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.05);
 
