@@ -39,6 +39,9 @@ def read_file(file_name):
 def save_history(history):
     history_df = pd.DataFrame(history.history)
 
+    if not os.path.exists("history"):
+        os.mkdir("history")
+
     # Overwrite latest or rename all previous histories?
 
     with open("history/history_latest.csv", "w") as f:
