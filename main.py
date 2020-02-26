@@ -1,6 +1,6 @@
 from tensorflow.keras import layers, models, preprocessing, backend as K
 from tensorflow.keras.models import load_model
-from tensorflow.keras.utils import get_custom_objects
+from tensorflow.keras.utils import get_custom_objects, plot_model
 from tensorflow.keras import callbacks
 from data_loader import read_file, split_data
 from PIL import Image
@@ -8,13 +8,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 from collections import defaultdict
 from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.model_selection import train_test_split
 from tensorflow.keras.applications.densenet import DenseNet121
 
 # Load the model saved to file instead of creating a new.
 USE_SAVED_MODEL = False
 DEBUG = False
 # How many epochs
-EPOCHS = 25
+EPOCHS = 250
 BATCH_SIZE = 128
 # Class weighting, in order to counter the effects of the inbalanced data.
 USE_CLASS_WEIGHTS = False
@@ -51,7 +52,7 @@ def get_class_weights(labels, num_of_classes=7):
     return class_weights
 
 
-def get_model():
+def create_model():
     model = models.Sequential()
     # TODO: tweak these hyperparams.
     model.add(
@@ -127,7 +128,7 @@ def predict(model, X_values):
     return model.predict(X_values).squeeze()
 
 
-def performance(history):
+def plot_performance(history):
     plt.plot(history.history["accuracy"])
     plt.title("Model accuracy")
     plt.ylabel("accuracy")
@@ -145,25 +146,26 @@ def performance(history):
 
 def main():
     X_data, y_data = read_file("data/skin/hmnist_28_28_RGB.csv")
-    X_data, y_data = shuffle_data(X_data, y_data)
-    # y_data = np.array([1 if y in [1,5,6] else 0 for y in y_data])
-    # draw_image(X_data[0])
-    X_train, y_train, X_val, y_val, X_test, y_test = split_data(X_data, y_data)
 
+    #X_data, y_data = shuffle_data(X_data, y_data)
+    #  X_train, y_train, X_val, y_val, X_test, y_test = split_data(X_data, y_data)
+    X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.2)
+    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.05);
 
     # model = DenseNet121(include_top=False, weights='imagenet', input_tensor=None,
     #                     input_shape=(28, 28, 3), pooling=None, classes=1000)
     # model.compile(
     #     optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
     # )
+    #  model, history = train_model(model, X_train, y_train)
 
     if USE_SAVED_MODEL:
         model = get_saved_model()
     else:
-        model = get_model()
+        model = create_model()
         model, history = train_model(model, X_train, y_train)
-
-    model, history = train_model(model, X_train, y_train)
+        if DEBUG:
+            plot_model(model, "model.png", show_shapes=True)
 
     test_loss, test_acc = model.evaluate(X_test, y_test, verbose=2)
     print("Testing accuracy", test_acc)
@@ -178,7 +180,7 @@ def main():
     print(classification_report(y_true=y_test, y_pred=y_pred, target_names=target_names))
 
     if DEBUG:
-        performance(history)
+        plot_performance(history)
 
 
 if __name__ == "__main__":
