@@ -1,3 +1,4 @@
+import tensorflow as tf
 from tensorflow.keras import layers, models, preprocessing, backend as K
 from tensorflow.keras import Model
 from tensorflow.keras.models import load_model
@@ -14,9 +15,9 @@ from tensorflow.keras.applications.densenet import DenseNet121
 USE_SAVED_MODEL = False
 DEBUG = False
 # How many epochs
-EPOCHS = 25
-BATCH_SIZE = 128
-# Class weighting, in order to counter the effects of the inbalanced data.
+EPOCHS = 20
+BATCH_SIZE = 8
+# Class weighting, in order to counter the effects of the imbalanced data.
 USE_CLASS_WEIGHTS = False
 USE_EARLY_STOPPING = False
 
@@ -95,39 +96,34 @@ def train_model(model, image_folder, save=True):
         vertical_flip=True,
     )
 
-    # class_weights = get_class_weights(y_train)
-
     if USE_EARLY_STOPPING:
-        es = callbacks.EarlyStopping(monitor='accuracy')
+        es = callbacks.EarlyStopping(monitor='val_accuracy')
     else:
         es = None
 
     datagen_val = preprocessing.image.ImageDataGenerator()
-    datagen_test = preprocessing.image.ImageDataGenerator()
 
     # datagen.fit(X_train)
     train_generator = datagen_train.flow_from_directory("data/skin/train",
-                                                        # target_size=(600, 450),
+                                                        batch_size=BATCH_SIZE,
+                                                        target_size=(224, 224),
                                                         shuffle=True)
 
     validation_generator = datagen_val.flow_from_directory("data/skin/validation",
+                                                           batch_size=BATCH_SIZE,
+                                                           target_size=(224, 224),
                                                            shuffle=True)
-
+    class_weights = get_class_weights(train_generator.classes)
+    print("lol")
     history = model.fit(
         train_generator,
         # steps_per_epoch=len(X_train) / BATCH_SIZE,
         validation_data=validation_generator,
         validation_steps=10015 * 0.05 / BATCH_SIZE,
-        epochs=1,
-        callbacks=es if es is not None else None,
-        # class_weight=class_weights if USE_CLASS_WEIGHTS else None
+        epochs=EPOCHS,
+        callbacks=[es] if es is not None else None,
+        class_weight=class_weights if USE_CLASS_WEIGHTS else None
     )
-
-    test_generator = datagen_test.flow_from_directory("data/skin/test",
-                                                      shuffle=True)
-
-    lol = model.evaluate_generator(generator=test_generator)
-    print(lol)
 
     if save:
         model.save("saved_model.h5")
@@ -172,7 +168,7 @@ def main():
     # X_train, y_train, X_val, y_val, X_test, y_test = split_data(X_data, y_data)
 
     base_model = DenseNet121(include_top=False, weights='imagenet', input_tensor=None,
-                             input_shape=(256, 256, 3), pooling=None, classes=7)
+                             input_shape=(224, 224, 3), pooling=None, classes=7)
 
     x = layers.Flatten()(base_model.output)
     x = layers.Dense(7, activation='softmax')(x)
@@ -190,21 +186,39 @@ def main():
     #     model, history = train_model(model, image_id_to_class,
     #                                  image_folder="data/skin/ham10000_images_part_1")
 
-    # test_loss, test_acc = model.evaluate(X_test, y_test, verbose=2)
-    # print("Testing accuracy", test_acc)
-    # print("Testing loss", test_loss)
+    datagen_test = preprocessing.image.ImageDataGenerator()
 
-    # y_pred = model.predict(X_test)
+    test_generator = datagen_test.flow_from_directory("data/skin/test",
+                                                      batch_size=BATCH_SIZE,
+                                                      target_size=(224, 224),
+                                                      shuffle=True)
+
+    test_loss, test_acc = model.evaluate(test_generator)
+    print("Testing accuracy", test_acc)
+    print("Testing loss", test_loss)
+
+    y_pred = model.predict(test_generator)
     # Decode the one-hot vector.
-    # y_pred = np.argmax(y_pred, axis=1)
-    # print(confusion_matrix(y_true=y_test, y_pred=y_pred))
-    # target_names = ['Actinic Keratoses', 'Basal cell carcinoma', 'Benign keratosis',
-    #                 'Dermatofibroma', 'Melanocytic nevi', 'Melanoma', 'Vascular skin lesions']
-    # print(classification_report(y_true=y_test, y_pred=y_pred, target_names=target_names))
-    #
-    # if DEBUG:
-    #     performance(history)
+    y_pred = np.argmax(y_pred, axis=1)
+    print(confusion_matrix(y_true=test_generator.classes, y_pred=y_pred))
+    target_names = ['Actinic Keratoses', 'Basal cell carcinoma', 'Benign keratosis',
+                    'Dermatofibroma', 'Melanocytic nevi', 'Melanoma', 'Vascular skin lesions']
+    print(classification_report(y_true=test_generator.classes, y_pred=y_pred,
+                                target_names=target_names))
+
+    if DEBUG:
+        performance(history)
+
+
+def fix_gpu():
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    if gpus:
+        for gpu in gpus:
+            print(gpu)
+            print("hey hey!")
+            tf.config.experimental.set_memory_growth(gpu, True)
 
 
 if __name__ == "__main__":
+    fix_gpu()
     main()

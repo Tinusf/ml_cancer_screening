@@ -41,7 +41,6 @@ def move_images(image_folders, image_id_to_class):
                 if not os.path.isdir(new_path):
                     os.mkdir(new_path)
                 new_path = os.path.join(new_path, label)
-                print(new_path)
                 if not os.path.isdir(new_path):
                     os.mkdir(new_path)
                 os.rename(file_path, os.path.join(new_path, name))
@@ -51,8 +50,6 @@ def main():
     image_id_to_class = read_metadata("../data/skin/HAM10000_metadata.csv")
     move_images(["../data/skin/ham10000_images_part_1", "../data/skin/ham10000_images_part_2"],
                 image_id_to_class)
-
-    print(image_id_to_class)
 
 
 if __name__ == '__main__':
