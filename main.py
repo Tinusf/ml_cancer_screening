@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.applications.densenet import DenseNet121
 
 # Load the model saved to file instead of creating a new.
 USE_SAVED_MODEL = False
@@ -19,13 +18,15 @@ EPOCHS = 10
 BATCH_SIZE = 128
 # Class weighting, in order to counter the effects of the inbalanced data.
 USE_CLASS_WEIGHTS = False
-USE_EARLY_STOPPING = False
+USE_EARLY_STOPPING = True
 
 VALIDATION_SIZE = 0.05
+
 
 def draw_image(numpy_3d_array):
     im = Image.fromarray(numpy_3d_array.astype(np.uint8))
     im.show()
+
 
 def swish(x):
     return K.sigmoid(x) * x
@@ -48,21 +49,44 @@ def get_class_weights(labels, num_of_classes=7):
 
 def create_model():
     model = models.Sequential()
-    # TODO: tweak these hyperparams.
     model.add(
         layers.Conv2D(
             filters=28, kernel_size=(3, 3), activation=swish, input_shape=(28, 28, 3)
         )
     )
+    model.add(layers.BatchNormalization())
     model.add(layers.MaxPooling2D((2, 2)))
+    model.add(layers.Dropout(0.2))
+
     model.add(layers.Conv2D(56, (3, 3), activation=swish))
+    model.add(layers.BatchNormalization())
     model.add(layers.MaxPooling2D((2, 2)))
+    model.add(layers.Dropout(0.2))
+
     model.add(layers.Conv2D(112, (3, 3), activation=swish))
+    model.add(layers.BatchNormalization())
+    model.add(layers.MaxPooling2D((2, 2)))
+    model.add(layers.Dropout(0.2))
+
     model.add(layers.Flatten())
-    model.add(layers.Dense(256, activation=swish))
-    model.add(layers.Dense(512, activation=swish))
-    model.add(layers.Dense(256, activation=swish))
-    model.add(layers.Dense(7, activation="softmax"))
+
+    model.add(layers.Dense(256))
+    model.add(layers.BatchNormalization())
+    model.add(layers.Activation("relu"))
+    model.add(layers.Dropout(0.2))
+
+    model.add(layers.Dense(512))
+    model.add(layers.BatchNormalization())
+    model.add(layers.Activation("relu"))
+    model.add(layers.Dropout(0.2))
+
+    model.add(layers.Dense(256))
+    model.add(layers.BatchNormalization())
+    model.add(layers.Activation("relu"))
+    model.add(layers.Dropout(0.2))
+
+    model.add(layers.Dense(7))
+    model.add(layers.Activation("softmax"))
 
     model.compile(
         optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
@@ -94,7 +118,7 @@ def train_model(model, X_train, y_train, save=True):
     class_weights = get_class_weights(y_train)
 
     if USE_EARLY_STOPPING:
-        es = callbacks.EarlyStopping(monitor='accuracy')
+        es = callbacks.EarlyStopping(monitor='val_accuracy', patience=10)
     else:
         es = None
 
@@ -106,7 +130,7 @@ def train_model(model, X_train, y_train, save=True):
         epochs=EPOCHS,
         validation_data=datagen.flow(X_train, y_train, batch_size=BATCH_SIZE, subset='validation'),
         validation_steps=len(X_train) * VALIDATION_SIZE / BATCH_SIZE,
-        callbacks=es if es is not None else None,
+        callbacks=[es] if es is not None else None,
         class_weight=class_weights if USE_CLASS_WEIGHTS else None
     )
     if save:
@@ -145,14 +169,6 @@ def main():
     X_data, y_data = read_file("data/skin/hmnist_28_28_RGB.csv")
 
     X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.2)
-    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.05);
-
-    # model = DenseNet121(include_top=False, weights='imagenet', input_tensor=None,
-    #                     input_shape=(28, 28, 3), pooling=None, classes=1000)
-    # model.compile(
-    #     optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
-    # )
-    #  model, history = train_model(model, X_train, y_train)
 
     if USE_SAVED_MODEL:
         model = get_saved_model()
