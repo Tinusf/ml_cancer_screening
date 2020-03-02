@@ -9,12 +9,13 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
+from custom_metrics import f1_score
 
 # Load the model saved to file instead of creating a new.
 USE_SAVED_MODEL = False
 DEBUG = False
 # How many epochs
-EPOCHS = 10
+EPOCHS = 2
 BATCH_SIZE = 128
 # Class weighting, in order to counter the effects of the inbalanced data.
 USE_CLASS_WEIGHTS = False
@@ -89,7 +90,9 @@ def create_model():
     model.add(layers.Activation("softmax"))
 
     model.compile(
-        optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
+        optimizer="adam",
+        loss="sparse_categorical_crossentropy",
+        metrics=["accuracy", f1_score]
     )
 
     return model
@@ -178,9 +181,10 @@ def main():
         if DEBUG:
             plot_model(model, "model.png", show_shapes=True)
 
-    test_loss, test_acc = model.evaluate(X_test, y_test, verbose=2)
+    test_loss, test_acc, f1 = model.evaluate(X_test, y_test, verbose=2)
     print("Testing accuracy", test_acc)
     print("Testing loss", test_loss)
+    print("F1 score", f1)
 
     y_pred = model.predict(X_test)
     # Decode the one-hot vector.
