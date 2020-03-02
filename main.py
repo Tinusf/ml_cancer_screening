@@ -142,7 +142,7 @@ def train_model(model, X_train, y_train, save=True):
 
 
 def get_saved_model():
-    get_custom_objects().update({"swish": layers.Activation(swish)})
+    get_custom_objects().update({"swish": layers.Activation(swish), "f1_score": f1_score})
     custom_objects = {"swish": swish}
     model = load_model("saved_model.h5", custom_objects)
     return model
