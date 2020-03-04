@@ -9,17 +9,18 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
-from custom_metrics import f1_score
+import tensorflow_addons.metrics as metrics
 
 # Load the model saved to file instead of creating a new.
-USE_SAVED_MODEL = True
+USE_SAVED_MODEL = False
 DEBUG = False
 # How many epochs
 EPOCHS = 2
 BATCH_SIZE = 128
 # Class weighting, in order to counter the effects of the inbalanced data.
 USE_CLASS_WEIGHTS = False
-USE_EARLY_STOPPING = True
+USE_EARLY_STOPPING = False
+NUMBER_OF_CLASSES = 7
 
 VALIDATION_SIZE = 0.05
 
@@ -86,16 +87,19 @@ def create_model():
     model.add(layers.Activation("relu"))
     model.add(layers.Dropout(0.2))
 
-    model.add(layers.Dense(7))
+    model.add(layers.Dense(NUMBER_OF_CLASSES))
     model.add(layers.Activation("softmax"))
-
     model.compile(
         optimizer="adam",
         loss="sparse_categorical_crossentropy",
-        metrics=["accuracy", f1_score]
+        metrics=["accuracy", get_f1_score_metric()]
     )
 
     return model
+
+
+def get_f1_score_metric():
+    return metrics.F1Score(num_classes=NUMBER_OF_CLASSES, average="micro", threshold=0.1)
 
 
 def train_model(model, X_train, y_train, save=True):
@@ -142,7 +146,8 @@ def train_model(model, X_train, y_train, save=True):
 
 
 def get_saved_model():
-    get_custom_objects().update({"swish": layers.Activation(swish), "f1_score": f1_score})
+    get_custom_objects().update(
+        {"swish": layers.Activation(swish), "F1Score": get_f1_score_metric()})
     custom_objects = {"swish": swish}
     model = load_model("saved_model.h5", custom_objects)
     return model
