@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
+from skimage.feature import hog
+from skimage import exposure
 
 # from tensorflow.keras.applications.densenet import DenseNet121
 
@@ -22,10 +24,33 @@ BATCH_SIZE = 128
 USE_CLASS_WEIGHTS = False
 USE_EARLY_STOPPING = False
 
+target_names = [
+    "Actinic Keratoses",
+    "Basal cell carcinoma",
+    "Benign keratosis",
+    "Dermatofibroma",
+    "Melanocytic nevi",
+    "Melanoma",
+    "Vascular skin lesions",
+]
+
 
 def draw_image(numpy_3d_array):
     im = Image.fromarray(numpy_3d_array.astype(np.uint8))
     im.show()
+
+
+def create_hog(image):
+    hog_image = hog(
+        image,
+        orientation=9,
+        pixel_per_cell=(2, 2),
+        cells_per_block=(1, 1),
+        visualizer=False,
+        multichannel=True,
+    )
+    hog_image_rescaled = exposure.rescale_intensity(hog_image, in_range=(0, 1))
+    return hog_image_rescaled
 
 
 def swish(x):
@@ -170,15 +195,6 @@ def main():
     # Decode the one-hot vector.
     y_pred = np.argmax(y_pred, axis=1)
     print(confusion_matrix(y_true=y_test, y_pred=y_pred))
-    target_names = [
-        "Actinic Keratoses",
-        "Basal cell carcinoma",
-        "Benign keratosis",
-        "Dermatofibroma",
-        "Melanocytic nevi",
-        "Melanoma",
-        "Vascular skin lesions",
-    ]
     print(
         classification_report(y_true=y_test, y_pred=y_pred, target_names=target_names)
     )
