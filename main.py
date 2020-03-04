@@ -99,7 +99,7 @@ def create_model():
 
 
 def get_f1_score_metric():
-    return metrics.F1Score(num_classes=NUMBER_OF_CLASSES, average="micro", threshold=0.1)
+    return metrics.F1Score(num_classes=NUMBER_OF_CLASSES, average="micro", threshold=0.5)
 
 
 def train_model(model, X_train, y_train, save=True):
@@ -124,10 +124,26 @@ def train_model(model, X_train, y_train, save=True):
 
     class_weights = get_class_weights(y_train)
 
+    callbacks_list = []
+
+    # Save the best validation accuracy model.
+    checkpoint_val_acc = callbacks.ModelCheckpoint("best_val_acc.h5", monitor='val_accuracy',
+                                                   save_best_only=True, mode='max')
+    callbacks_list.append(checkpoint_val_acc)
+
+    # Save the best F1 score model.
+    checkpoint_f1 = callbacks.ModelCheckpoint("best_f1.h5", monitor='val_f1_score',
+                                              save_best_only=True, mode='max')
+
+    callbacks_list.append(checkpoint_f1)
+
+    # Save the best training accuracy (probably overfitted)
+    checkpoint_acc = callbacks.ModelCheckpoint("best_acc.h5", monitor='accuracy',
+                                               save_best_only=True, mode='max')
+
+    callbacks_list.append(checkpoint_acc)
     if USE_EARLY_STOPPING:
-        es = callbacks.EarlyStopping(monitor='val_accuracy', patience=10)
-    else:
-        es = None
+        callbacks_list.append(callbacks.EarlyStopping(monitor='val_accuracy', patience=10))
 
     datagen.fit(X_train)
 
@@ -137,7 +153,7 @@ def train_model(model, X_train, y_train, save=True):
         epochs=EPOCHS,
         validation_data=datagen.flow(X_train, y_train, batch_size=BATCH_SIZE, subset='validation'),
         validation_steps=len(X_train) * VALIDATION_SIZE / BATCH_SIZE,
-        callbacks=[es] if es is not None else None,
+        callbacks=callbacks_list,
         class_weight=class_weights if USE_CLASS_WEIGHTS else None
     )
     if save:
@@ -187,8 +203,8 @@ def main():
             plot_model(model, "model.png", show_shapes=True)
 
     stats = model.evaluate(X_test, y_test, verbose=2)
-    print("Testing accuracy", stats[0])
-    print("Testing loss", stats[1])
+    print("Testing loss", stats[0])
+    print("Testing accuracy", stats[1])
     if len(stats) == 3:
         print("F1 score", stats[2])
 
