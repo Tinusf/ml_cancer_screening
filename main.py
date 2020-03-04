@@ -12,7 +12,7 @@ from sklearn.model_selection import train_test_split
 from custom_metrics import f1_score
 
 # Load the model saved to file instead of creating a new.
-USE_SAVED_MODEL = False
+USE_SAVED_MODEL = True
 DEBUG = False
 # How many epochs
 EPOCHS = 2
@@ -181,10 +181,11 @@ def main():
         if DEBUG:
             plot_model(model, "model.png", show_shapes=True)
 
-    test_loss, test_acc, f1 = model.evaluate(X_test, y_test, verbose=2)
-    print("Testing accuracy", test_acc)
-    print("Testing loss", test_loss)
-    print("F1 score", f1)
+    stats = model.evaluate(X_test, y_test, verbose=2)
+    print("Testing accuracy", stats[0])
+    print("Testing loss", stats[1])
+    if len(stats) == 3:
+        print("F1 score", stats[2])
 
     y_pred = model.predict(X_test)
     # Decode the one-hot vector.
