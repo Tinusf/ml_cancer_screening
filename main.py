@@ -10,19 +10,21 @@ from collections import defaultdict
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
 from skimage.feature import hog
-from skimage import exposure
+
+#  from skimage import exposure
 
 # from tensorflow.keras.applications.densenet import DenseNet121
 
 # Load the model saved to file instead of creating a new.
-USE_SAVED_MODEL = True
+USE_SAVED_MODEL = False
 DEBUG = True
 # How many epochs
-EPOCHS = 10
+EPOCHS = 250
 BATCH_SIZE = 128
 # Class weighting, in order to counter the effects of the inbalanced data.
 USE_CLASS_WEIGHTS = False
 USE_EARLY_STOPPING = False
+USE_HOG = True
 
 target_names = [
     "Actinic Keratoses",
@@ -41,16 +43,43 @@ def draw_image(numpy_3d_array):
 
 
 def create_hog(image):
-    hog_image = hog(
-        image,
-        orientation=9,
-        pixel_per_cell=(2, 2),
+
+    image_r = image[:, :, 0]
+    image_g = image[:, :, 1]
+    image_b = image[:, :, 2]
+
+    fd, hog_image_r = hog(
+        image_r,
+        orientations=18,
+        pixels_per_cell=(2, 2),
         cells_per_block=(1, 1),
-        visualizer=False,
-        multichannel=True,
+        visualize=True,
+        multichannel=False,
     )
-    hog_image_rescaled = exposure.rescale_intensity(hog_image, in_range=(0, 1))
-    return hog_image_rescaled
+    fd, hog_image_g = hog(
+        image_g,
+        orientations=18,
+        pixels_per_cell=(2, 2),
+        cells_per_block=(1, 1),
+        visualize=True,
+        multichannel=False,
+    )
+    fd, hog_image_b = hog(
+        image_b,
+        orientations=18,
+        cells_per_block=(1, 1),
+        visualize=True,
+        multichannel=False,
+    )
+    #  f, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4)
+    #  ax1.imshow(hog_image_r)
+    #  ax2.imshow(hog_image_g)
+    #  ax3.imshow(hog_image_b)
+    #  ax4.imshow(image)
+    #  plt.show()
+    #  hog_image = [hog_image_r, hog_image_g, hog_image_b]
+    hog_image = np.dstack((hog_image_r, hog_image_g, hog_image_b))
+    return hog_image
 
 
 def swish(x):
@@ -67,6 +96,8 @@ def get_class_weights(labels, num_of_classes=7):
 
     class_weights = {}
     for i in range(0, num_of_classes):
+        if counter[i] == 0:
+            counter[i] = 1
         class_weights[i] = (1 / counter[i]) * (total) / num_of_classes
 
     return class_weights
@@ -168,6 +199,12 @@ def plot_performance(history):
 
 def main():
     X_data, y_data = read_file("data/skin/hmnist_28_28_RGB.csv")
+    #  X_data = X_data[0:100]
+    #  y_data = y_data[0:100]
+
+    if USE_HOG:
+        X_data = [create_hog(x) for x in X_data]
+        X_data = np.array(X_data)
 
     X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.2)
     X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.05)
