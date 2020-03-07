@@ -1,7 +1,7 @@
 from tensorflow.keras import layers, models, preprocessing, backend as K
 from tensorflow.keras.models import load_model
 from tensorflow.keras.utils import get_custom_objects, plot_model
-from tensorflow.keras import callbacks
+from tensorflow.keras import callbacks, optimizers
 from data_loader import read_file
 from PIL import Image
 import numpy as np
@@ -15,7 +15,7 @@ import tensorflow_addons.metrics as metrics
 USE_SAVED_MODEL = False
 DEBUG = False
 # How many epochs
-EPOCHS = 2
+EPOCHS = 30
 BATCH_SIZE = 128
 # Class weighting, in order to counter the effects of the inbalanced data.
 USE_CLASS_WEIGHTS = False
@@ -23,6 +23,8 @@ USE_EARLY_STOPPING = False
 NUMBER_OF_CLASSES = 7
 
 VALIDATION_SIZE = 0.05
+
+DROPOUT_PROB = 0.1
 
 
 def draw_image(numpy_3d_array):
@@ -51,46 +53,47 @@ def get_class_weights(labels, num_of_classes=7):
 
 def create_model():
     model = models.Sequential()
+    model.add(layers.BatchNormalization())
     model.add(
         layers.Conv2D(
-            filters=28, kernel_size=(3, 3), activation=swish, input_shape=(28, 28, 3)
+            filters=28, kernel_size=(3, 3), activation="relu", input_shape=(28, 28, 3)
         )
     )
     model.add(layers.BatchNormalization())
     model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.Dropout(0.2))
+    model.add(layers.Dropout(DROPOUT_PROB))
 
-    model.add(layers.Conv2D(56, (3, 3), activation=swish))
+    model.add(layers.Conv2D(56, (3, 3), activation="relu"))
     model.add(layers.BatchNormalization())
     model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.Dropout(0.2))
+    model.add(layers.Dropout(DROPOUT_PROB))
 
-    model.add(layers.Conv2D(112, (3, 3), activation=swish))
+    model.add(layers.Conv2D(112, (3, 3), activation="relu"))
     model.add(layers.BatchNormalization())
     model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.Dropout(0.2))
+    model.add(layers.Dropout(DROPOUT_PROB))
 
     model.add(layers.Flatten())
 
     model.add(layers.Dense(256))
     model.add(layers.BatchNormalization())
-    model.add(layers.Activation("relu"))
-    model.add(layers.Dropout(0.2))
+    model.add(layers.Activation(swish))
+    model.add(layers.Dropout(DROPOUT_PROB))
 
     model.add(layers.Dense(512))
     model.add(layers.BatchNormalization())
-    model.add(layers.Activation("relu"))
-    model.add(layers.Dropout(0.2))
+    model.add(layers.Activation(swish))
+    model.add(layers.Dropout(DROPOUT_PROB))
 
     model.add(layers.Dense(256))
     model.add(layers.BatchNormalization())
-    model.add(layers.Activation("relu"))
-    model.add(layers.Dropout(0.2))
+    model.add(layers.Activation(swish))
+    model.add(layers.Dropout(DROPOUT_PROB))
 
     model.add(layers.Dense(NUMBER_OF_CLASSES))
     model.add(layers.Activation("softmax"))
     model.compile(
-        optimizer="adam",
+        optimizer=optimizers.Adam(learning_rate=0.001),
         loss="sparse_categorical_crossentropy",
         metrics=["accuracy", get_f1_score_metric()]
     )
@@ -112,11 +115,11 @@ def train_model(model, X_train, y_train, save=True):
 
     datagen = preprocessing.image.ImageDataGenerator(
         rotation_range=360,
-        width_shift_range=0.2,
-        height_shift_range=0.2,
+        width_shift_range=0.5,
+        height_shift_range=0.5,
         brightness_range=[0.5, 1.0],
         shear_range=1.0,
-        zoom_range=0.1,
+        zoom_range=0.2,
         horizontal_flip=True,
         vertical_flip=True,
         validation_split=VALIDATION_SIZE,
@@ -192,7 +195,8 @@ def plot_performance(history):
 def main():
     X_data, y_data = read_file("data/skin/hmnist_28_28_RGB.csv")
 
-    X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.2)
+    X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.2,
+                                                        random_state=42)
 
     if USE_SAVED_MODEL:
         model = get_saved_model()
