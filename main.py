@@ -10,13 +10,14 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 from sklearn.metrics import classification_report, confusion_matrix
 from tensorflow.keras.applications.densenet import DenseNet121
+from tensorflow.keras.applications.resnet_v2 import ResNet152V2
 
 # Load the model saved to file instead of creating a new.
 USE_SAVED_MODEL = False
 DEBUG = False
 # How many epochs
-EPOCHS = 20
-BATCH_SIZE = 8
+EPOCHS = 3
+BATCH_SIZE = 4
 # Class weighting, in order to counter the effects of the imbalanced data.
 USE_CLASS_WEIGHTS = False
 USE_EARLY_STOPPING = False
@@ -167,8 +168,12 @@ def main():
     # draw_image(X_data[0])
     # X_train, y_train, X_val, y_val, X_test, y_test = split_data(X_data, y_data)
 
-    base_model = DenseNet121(include_top=False, weights='imagenet', input_tensor=None,
-                             input_shape=(224, 224, 3), pooling=None, classes=7)
+    # base_model = DenseNet121(include_top=False, weights='imagenet', input_tensor=None,
+    #                          input_shape=(224, 224, 3), pooling=None, classes=7)
+
+    base_model = ResNet152V2(include_top=True, weights='imagenet', input_tensor=None,
+                             input_shape=(224, 224, 3), pooling="max", classes=1000)
+
 
     x = layers.Flatten()(base_model.output)
     x = layers.Dense(7, activation='softmax')(x)
