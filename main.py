@@ -2,7 +2,7 @@ from tensorflow.keras import layers, models, preprocessing, backend as K
 from tensorflow.keras.models import load_model
 from tensorflow.keras.utils import get_custom_objects, plot_model
 from tensorflow.keras import callbacks, optimizers
-from data_loader import read_file
+from data_loader import read_file, save_history, load_history
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
@@ -13,9 +13,9 @@ import tensorflow_addons.metrics as metrics
 
 # Load the model saved to file instead of creating a new.
 USE_SAVED_MODEL = True
-DEBUG = False
+DEBUG = True
 # How many epochs
-EPOCHS = 30
+EPOCHS = 2
 BATCH_SIZE = 128
 # Class weighting, in order to counter the effects of the inbalanced data.
 USE_CLASS_WEIGHTS = False
@@ -173,6 +173,7 @@ def train_model(model, X_train, y_train, save=True):
     )
     if save:
         model.save("saved_models/saved_model.h5")
+        save_history(history)
     return model, history
 
 
@@ -181,7 +182,8 @@ def get_saved_model():
         {"swish": layers.Activation(swish), "F1Score": get_f1_score_metric()})
     custom_objects = {"swish": swish}
     model = load_model("saved_models/best_val_acc.h5", custom_objects)
-    return model
+    history = load_history("latest")
+    return model, history
 
 
 def predict(model, X_values):
@@ -189,18 +191,20 @@ def predict(model, X_values):
 
 
 def plot_performance(history):
-    plt.plot(history.history["accuracy"])
-    plt.title("Model accuracy")
-    plt.ylabel("accuracy")
-    plt.xlabel("epoch")
-    plt.legend(["train", "test"], loc="upper left")
+    x_axis = list(range(len(history.history["accuracy"])))
+    plt.plot(x_axis, history.history["accuracy"], "b", label="Training accuracy")
+    plt.plot(x_axis, history.history["val_accuracy"], "r", label="Validation accuracy")
+    plt.ylabel("Accuracy")
+    plt.xlabel("Epoch")
+    plt.legend()
     plt.show()
 
-    plt.plot(history.history["loss"])
-    plt.title("Model loss")
-    plt.ylabel("loss")
-    plt.xlabel("epoch")
-    plt.legend(["train", "test"], loc="upper left")
+    x_axis = list(range(len(history.history["loss"])))
+    plt.plot(x_axis, history.history["loss"], "b", label="Training loss")
+    plt.plot(x_axis, history.history["val_loss"], "r", label="Validation loss")
+    plt.ylabel("Loss")
+    plt.xlabel("Epoch")
+    plt.legend()
     plt.show()
 
 
@@ -212,7 +216,7 @@ def main():
                                                         random_state=42)
 
     if USE_SAVED_MODEL:
-        model = get_saved_model()
+        model, history = get_saved_model()
     else:
         model = create_model()
         model, history = train_model(model, X_train, y_train)
