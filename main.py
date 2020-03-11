@@ -1,3 +1,4 @@
+import tensorflow as tf
 from tensorflow.keras import layers, models, preprocessing, backend as K
 from tensorflow.keras.models import load_model
 from tensorflow.keras.utils import get_custom_objects, plot_model
@@ -10,10 +11,11 @@ from collections import defaultdict
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
 import tensorflow_addons.metrics as metrics
+import datetime
 
 # Load the model saved to file instead of creating a new.
 USE_SAVED_MODEL = True
-DEBUG = True
+DEBUG = False
 # How many epochs
 EPOCHS = 2
 BATCH_SIZE = 128
@@ -156,6 +158,10 @@ def train_model(model, X_train, y_train, save=True):
                                                     monitor='val_loss', save_best_only=True,
                                                     mode='min')
     callbacks_list.append(checkpoint_val_loss)
+
+    log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
+    callbacks_list.append(tensorboard_callback)
 
     if USE_EARLY_STOPPING:
         callbacks_list.append(callbacks.EarlyStopping(monitor='val_accuracy', patience=10))
