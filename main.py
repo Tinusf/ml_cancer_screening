@@ -12,10 +12,10 @@ from sklearn.model_selection import train_test_split
 import tensorflow_addons.metrics as metrics
 
 # Load the model saved to file instead of creating a new.
-USE_SAVED_MODEL = True
-DEBUG = True
+USE_SAVED_MODEL = False
+DEBUG = False
 # How many epochs
-EPOCHS = 2
+EPOCHS = 1000
 BATCH_SIZE = 128
 # Class weighting, in order to counter the effects of the inbalanced data.
 USE_CLASS_WEIGHTS = False
@@ -74,16 +74,6 @@ def create_model():
     model.add(layers.Dropout(DROPOUT_PROB))
 
     model.add(layers.Flatten())
-
-    model.add(layers.Dense(256))
-    model.add(layers.BatchNormalization())
-    model.add(layers.Activation(swish))
-    model.add(layers.Dropout(DROPOUT_PROB))
-
-    model.add(layers.Dense(512))
-    model.add(layers.BatchNormalization())
-    model.add(layers.Activation(swish))
-    model.add(layers.Dropout(DROPOUT_PROB))
 
     model.add(layers.Dense(256))
     model.add(layers.BatchNormalization())
