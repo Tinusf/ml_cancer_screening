@@ -24,7 +24,7 @@ def base64_to_numpy(base64string):
     # image is (28, 28)
     img = img.resize(dimensions, Image.ANTIALIAS)
 
-    pixels = numpy.asarray(img, dtype='uint8')
+    pixels = numpy.asarray(img, dtype='float64')
     return pixels
 
 

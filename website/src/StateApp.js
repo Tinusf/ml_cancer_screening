@@ -13,7 +13,6 @@ class StateApp extends Component {
 
   changeResults = (results) => {
     this.setState({ results: results });
-    console.log(results);
   }
 
   getMostLikely = () => {
