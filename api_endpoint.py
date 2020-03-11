@@ -11,7 +11,7 @@ import main
 app = Flask(__name__)
 CORS(app)
 
-model = main.get_saved_model()
+model, _ = main.get_saved_model()
 
 
 def base64_to_numpy(base64string):
