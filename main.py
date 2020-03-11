@@ -12,7 +12,7 @@ from sklearn.model_selection import train_test_split
 import tensorflow_addons.metrics as metrics
 
 # Load the model saved to file instead of creating a new.
-USE_SAVED_MODEL = False
+USE_SAVED_MODEL = True
 DEBUG = False
 # How many epochs
 EPOCHS = 30
@@ -24,7 +24,7 @@ NUMBER_OF_CLASSES = 7
 
 VALIDATION_SIZE = 0.05
 
-DROPOUT_PROB = 0.1
+DROPOUT_PROB = 0.0
 
 
 def draw_image(numpy_3d_array):
@@ -130,18 +130,19 @@ def train_model(model, X_train, y_train, save=True):
     callbacks_list = []
 
     # Save the best validation accuracy model.
-    checkpoint_val_acc = callbacks.ModelCheckpoint("best_val_acc.h5", monitor='val_accuracy',
-                                                   save_best_only=True, mode='max')
+    checkpoint_val_acc = callbacks.ModelCheckpoint("saved_models/best_val_acc.h5",
+                                                   monitor='val_accuracy', save_best_only=True,
+                                                   mode='max')
     callbacks_list.append(checkpoint_val_acc)
 
     # Save the best F1 score model.
-    checkpoint_f1 = callbacks.ModelCheckpoint("best_f1.h5", monitor='val_f1_score',
+    checkpoint_f1 = callbacks.ModelCheckpoint("saved_models/best_f1.h5", monitor='val_f1_score',
                                               save_best_only=True, mode='max')
 
     callbacks_list.append(checkpoint_f1)
 
     # Save the best training accuracy (probably overfitted)
-    checkpoint_acc = callbacks.ModelCheckpoint("best_acc.h5", monitor='accuracy',
+    checkpoint_acc = callbacks.ModelCheckpoint("saved_models/best_acc.h5", monitor='accuracy',
                                                save_best_only=True, mode='max')
 
     callbacks_list.append(checkpoint_acc)
@@ -160,7 +161,7 @@ def train_model(model, X_train, y_train, save=True):
         class_weight=class_weights if USE_CLASS_WEIGHTS else None
     )
     if save:
-        model.save("saved_model.h5")
+        model.save("saved_models/saved_model.h5")
     return model, history
 
 
@@ -168,7 +169,7 @@ def get_saved_model():
     get_custom_objects().update(
         {"swish": layers.Activation(swish), "F1Score": get_f1_score_metric()})
     custom_objects = {"swish": swish}
-    model = load_model("saved_model.h5", custom_objects)
+    model = load_model("saved_models/best_val_acc.h5", custom_objects)
     return model
 
 
@@ -194,6 +195,7 @@ def plot_performance(history):
 
 def main():
     X_data, y_data = read_file("data/skin/hmnist_28_28_RGB.csv")
+    X_data = X_data.astype('float64')
 
     X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.2,
                                                         random_state=42)
