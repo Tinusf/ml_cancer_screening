@@ -144,8 +144,19 @@ def train_model(model, X_train, y_train, save=True):
     # Save the best training accuracy (probably overfitted)
     checkpoint_acc = callbacks.ModelCheckpoint("saved_models/best_acc.h5", monitor='accuracy',
                                                save_best_only=True, mode='max')
-
     callbacks_list.append(checkpoint_acc)
+
+    # Save the least Loss
+    checkpoint_loss = callbacks.ModelCheckpoint("saved_models/best_loss.h5", monitor='loss',
+                                                save_best_only=True, mode='min')
+    callbacks_list.append(checkpoint_loss)
+
+    # Save the least validation loss
+    checkpoint_val_loss = callbacks.ModelCheckpoint("saved_models/best_val_loss.h5",
+                                                    monitor='val_loss', save_best_only=True,
+                                                    mode='min')
+    callbacks_list.append(checkpoint_val_loss)
+
     if USE_EARLY_STOPPING:
         callbacks_list.append(callbacks.EarlyStopping(monitor='val_accuracy', patience=10))
 
