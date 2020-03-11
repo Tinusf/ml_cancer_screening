@@ -3,8 +3,6 @@ import './App.css';
 import Webcam from "react-webcam";
 
 const App = props => {
-  let results = "testy";
-
   const changeResults = props.changeResults;
 
   async function query(data) {
@@ -18,9 +16,8 @@ const App = props => {
         data
       })
     });
-    results = await response.json();
+    let results = await response.json();
     changeResults(results);
-    console.log(results);
   }
 
   const webcamRef = React.useRef(null);
@@ -46,7 +43,7 @@ const App = props => {
         }}
       />
       <p>
-        Check for skin cancer!
+        Check for skin cancer
         </p>
       <button className="large green button" onClick={capture}>Capture</button>
     </div>
