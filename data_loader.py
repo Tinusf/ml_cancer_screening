@@ -39,17 +39,17 @@ def read_file(file_name):
 def save_history(history):
     history_df = pd.DataFrame(history.history)
 
-    if not os.path.exists("history"):
-        os.mkdir("history")
+    if not os.path.exists("saved_models/history"):
+        os.mkdir("saved_models/history")
 
     # Overwrite latest or rename all previous histories?
 
-    with open("history/history_latest.csv", "w") as f:
+    with open("saved_models/history/history_latest.csv", "w") as f:
         history_df.to_csv(f)
 
 
 def load_history(version="latest"):
-    file_name = "history/history_" + version + ".csv"
+    file_name = "saved_models/history/history_" + version + ".csv"
     history = dict()
     if os.path.exists(file_name):
         with open(file_name, newline="") as csvfile:
