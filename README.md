@@ -39,3 +39,7 @@ A simple way to host the website using a Debian and Apache2.
 
 For the backend:
 * Simply run the `./start_flask_api.sh` in a `screen`.
+
+# TensorBoard
+In order to visualize your training, you can have a look at the tensorboard by using the command  
+`tensorboard --logdir saved_models/logs/fit`.
