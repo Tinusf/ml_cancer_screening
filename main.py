@@ -15,7 +15,7 @@ import datetime
 
 # Load the model saved to file instead of creating a new.
 USE_SAVED_MODEL = True
-DEBUG = False
+DEBUG = True
 # How many epochs
 EPOCHS = 2
 BATCH_SIZE = 128
@@ -159,7 +159,7 @@ def train_model(model, X_train, y_train, save=True):
                                                     mode='min')
     callbacks_list.append(checkpoint_val_loss)
 
-    log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    log_dir = "saved_models/logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
     callbacks_list.append(tensorboard_callback)
 

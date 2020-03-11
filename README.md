@@ -42,4 +42,4 @@ For the backend:
 
 # TensorBoard
 In order to visualize your training, you can have a look at the tensorboard by using the command  
-`tensorboard --logdir logs/fit`.
+`tensorboard --logdir saved_models/logs/fit`.
