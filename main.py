@@ -13,9 +13,9 @@ import tensorflow_addons.metrics as metrics
 
 # Load the model saved to file instead of creating a new.
 USE_SAVED_MODEL = True
-DEBUG = False
+DEBUG = True
 # How many epochs
-EPOCHS = 30
+EPOCHS = 2
 BATCH_SIZE = 128
 # Class weighting, in order to counter the effects of the inbalanced data.
 USE_CLASS_WEIGHTS = False
@@ -191,18 +191,20 @@ def predict(model, X_values):
 
 
 def plot_performance(history):
-    plt.plot(history.history["accuracy"])
-    plt.title("Model accuracy")
-    plt.ylabel("accuracy")
-    plt.xlabel("epoch")
-    plt.legend(["train", "test"], loc="upper left")
+    x_axis = list(range(len(history.history["accuracy"])))
+    plt.plot(x_axis, history.history["accuracy"], "b", label="Training accuracy")
+    plt.plot(x_axis, history.history["val_accuracy"], "r", label="Validation accuracy")
+    plt.ylabel("Accuracy")
+    plt.xlabel("Epoch")
+    plt.legend()
     plt.show()
 
-    plt.plot(history.history["loss"])
-    plt.title("Model loss")
-    plt.ylabel("loss")
-    plt.xlabel("epoch")
-    plt.legend(["train", "test"], loc="upper left")
+    x_axis = list(range(len(history.history["loss"])))
+    plt.plot(x_axis, history.history["loss"], "b", label="Training loss")
+    plt.plot(x_axis, history.history["val_loss"], "r", label="Validation loss")
+    plt.ylabel("Loss")
+    plt.xlabel("Epoch")
+    plt.legend()
     plt.show()
 
 
