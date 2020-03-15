@@ -17,7 +17,7 @@ import datetime
 USE_SAVED_MODEL = True
 DEBUG = True
 # How many epochs
-EPOCHS = 2
+EPOCHS = 12000
 BATCH_SIZE = 128
 # Class weighting, in order to counter the effects of the inbalanced data.
 USE_CLASS_WEIGHTS = False
@@ -26,7 +26,7 @@ NUMBER_OF_CLASSES = 7
 
 VALIDATION_SIZE = 0.05
 
-DROPOUT_PROB = 0.0
+DROPOUT_PROB = 0.2
 
 
 def draw_image(numpy_3d_array):
@@ -187,7 +187,7 @@ def get_saved_model():
     get_custom_objects().update(
         {"swish": layers.Activation(swish), "F1Score": get_f1_score_metric()})
     custom_objects = {"swish": swish}
-    model = load_model("saved_models/best_val_acc.h5", custom_objects)
+    model = load_model("saved_models/saved_model.h5", custom_objects)
     history = load_history("latest")
     return model, history
 
