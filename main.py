@@ -12,10 +12,11 @@ from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
 import tensorflow_addons.metrics as metrics
 import datetime
+from imblearn.over_sampling import RandomOverSampler
 
 # Load the model saved to file instead of creating a new.
-USE_SAVED_MODEL = True
-DEBUG = True
+USE_SAVED_MODEL = False
+DEBUG = False
 # How many epochs
 EPOCHS = 12000
 BATCH_SIZE = 128
@@ -214,9 +215,21 @@ def plot_performance(history):
     plt.show()
 
 
+def oversample(x, y):
+    image_shape = x.shape[1:]
+    flatten_size = np.product(image_shape)
+    x = x.reshape(x.shape[0], flatten_size)
+    rus = RandomOverSampler(random_state=42)
+    x, y = rus.fit_resample(x, y)
+    x = x.reshape(x.shape[0], *image_shape)
+    return x, y
+
+
 def main():
     X_data, y_data = read_file("data/skin/hmnist_28_28_RGB.csv")
     X_data = X_data.astype('float64')
+
+    X_data, y_data = oversample(X_data, y_data)
 
     X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.2,
                                                         random_state=42)
