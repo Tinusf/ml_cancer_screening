@@ -15,8 +15,8 @@ import datetime
 from imblearn.over_sampling import RandomOverSampler
 
 # Load the model saved to file instead of creating a new.
-USE_SAVED_MODEL = False
-DEBUG = False
+USE_SAVED_MODEL = True
+DEBUG = True
 # How many epochs
 EPOCHS = 12000
 BATCH_SIZE = 128
@@ -188,7 +188,7 @@ def get_saved_model():
     get_custom_objects().update(
         {"swish": layers.Activation(swish), "F1Score": get_f1_score_metric()})
     custom_objects = {"swish": swish}
-    model = load_model("saved_models/best_f1.h5", custom_objects)
+    model = load_model("saved_models/best_val_acc.h5", custom_objects)
     history = load_history("latest")
     return model, history
 
@@ -229,10 +229,11 @@ def main():
     X_data, y_data = read_file("data/skin/hmnist_28_28_RGB.csv")
     X_data = X_data.astype('float64')
 
-    X_data, y_data = oversample(X_data, y_data)
-
     X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.2,
                                                         random_state=42)
+
+    # Oversample the training set.
+    X_train, y_train = oversample(X_train, y_train)
 
     if USE_SAVED_MODEL:
         model, history = get_saved_model()
