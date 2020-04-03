@@ -229,7 +229,7 @@ def main():
     X_data, y_data = read_file("data/skin/hmnist_28_28_RGB.csv")
     X_data = X_data.astype('float64')
 
-    X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.2,
+    X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.05,
                                                         random_state=42)
 
     # Oversample the training set.
