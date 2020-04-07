@@ -170,10 +170,10 @@ def train_model(model, X_train, y_train, X_val, y_val, save=True):
 
     history = model.fit(
         datagen.flow(X_train, y_train, batch_size=BATCH_SIZE),
-        steps_per_epoch=len(X_train) * (1 - VALIDATION_SIZE) / BATCH_SIZE,
+        steps_per_epoch=len(X_train) / BATCH_SIZE,
         epochs=EPOCHS,
-        validation_data=datagen.flow(X_val, y_val, batch_size=BATCH_SIZE),
-        validation_steps=len(X_train) * VALIDATION_SIZE / BATCH_SIZE,
+        validation_data=(X_val, y_val),
+        validation_steps=len(X_val) / BATCH_SIZE,
         callbacks=callbacks_list,
         class_weight=class_weights if USE_CLASS_WEIGHTS else None
     )
@@ -187,7 +187,7 @@ def get_saved_model():
     get_custom_objects().update(
         {"swish": layers.Activation(swish), "F1Score": get_f1_score_metric()})
     custom_objects = {"swish": swish}
-    model = load_model("saved_models/best_val_acc.h5", custom_objects)
+    model = load_model("saved_models/best_val_loss.h5", custom_objects)
     history = load_history("latest")
     return model, history
 
