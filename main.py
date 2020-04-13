@@ -59,21 +59,19 @@ def create_model():
     model.add(layers.BatchNormalization())
     model.add(
         layers.Conv2D(
-            filters=28, kernel_size=(3, 3), activation="relu", input_shape=(28, 28, 3)
+            filters=28, kernel_size=(5, 5), padding="same", activation="relu",
+            input_shape=(28, 28, 3), strides=(2, 2)
         )
     )
     model.add(layers.BatchNormalization())
-    model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Dropout(DROPOUT_PROB))
 
-    model.add(layers.Conv2D(56, (3, 3), activation="relu"))
+    model.add(layers.Conv2D(56, (5, 5), padding="same", activation="relu", strides=(2, 2)))
     model.add(layers.BatchNormalization())
-    model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Dropout(DROPOUT_PROB))
 
-    model.add(layers.Conv2D(112, (3, 3), activation="relu"))
+    model.add(layers.Conv2D(112, (5, 5), padding="same", activation="relu", strides=(2, 2)))
     model.add(layers.BatchNormalization())
-    model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Dropout(DROPOUT_PROB))
 
     model.add(layers.Flatten())
