@@ -43,3 +43,5 @@ For the backend:
 # TensorBoard
 In order to visualize your training, you can have a look at the tensorboard by using the command  
 `tensorboard --logdir saved_models/logs/fit`.
+
+Some of the tensorboard logs are too big for git and can therefore be downloaded from: `http://tinusf.com/eit_models/`

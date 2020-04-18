@@ -12,14 +12,15 @@ from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
 import tensorflow_addons.metrics as metrics
 import datetime
+from imblearn.over_sampling import RandomOverSampler
 
 # Load the model saved to file instead of creating a new.
 USE_SAVED_MODEL = True
 DEBUG = True
 # How many epochs
-EPOCHS = 12000
+EPOCHS = 1
 BATCH_SIZE = 128
-# Class weighting, in order to counter the effects of the inbalanced data.
+# Class weighting, in order to counter the effects of the imbalanced data.
 USE_CLASS_WEIGHTS = False
 USE_EARLY_STOPPING = False
 NUMBER_OF_CLASSES = 7
@@ -58,21 +59,19 @@ def create_model():
     model.add(layers.BatchNormalization())
     model.add(
         layers.Conv2D(
-            filters=28, kernel_size=(3, 3), activation="relu", input_shape=(28, 28, 3)
+            filters=28, kernel_size=(5, 5), padding="same", activation="relu",
+            input_shape=(28, 28, 3), strides=(2, 2)
         )
     )
     model.add(layers.BatchNormalization())
-    model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Dropout(DROPOUT_PROB))
 
-    model.add(layers.Conv2D(56, (3, 3), activation="relu"))
+    model.add(layers.Conv2D(56, (5, 5), padding="same", activation="relu", strides=(2, 2)))
     model.add(layers.BatchNormalization())
-    model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Dropout(DROPOUT_PROB))
 
-    model.add(layers.Conv2D(112, (3, 3), activation="relu"))
+    model.add(layers.Conv2D(112, (5, 5), padding="same", activation="relu", strides=(2, 2)))
     model.add(layers.BatchNormalization())
-    model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Dropout(DROPOUT_PROB))
 
     model.add(layers.Flatten())
@@ -95,7 +94,7 @@ def create_model():
     model.add(layers.Dense(NUMBER_OF_CLASSES))
     model.add(layers.Activation("softmax"))
     model.compile(
-        optimizer=optimizers.Adam(learning_rate=0.001),
+        optimizer=optimizers.Adam(learning_rate=0.003),
         loss="sparse_categorical_crossentropy",
         metrics=["accuracy", get_f1_score_metric()]
     )
@@ -107,7 +106,7 @@ def get_f1_score_metric():
     return metrics.F1Score(num_classes=NUMBER_OF_CLASSES, average="micro", threshold=0.5)
 
 
-def train_model(model, X_train, y_train, save=True):
+def train_model(model, X_train, y_train, X_val, y_val, save=True):
     """
     :param X_train: The features that should be trained on.
     :param y_train: The labels
@@ -124,7 +123,6 @@ def train_model(model, X_train, y_train, save=True):
         zoom_range=0.2,
         horizontal_flip=True,
         vertical_flip=True,
-        validation_split=VALIDATION_SIZE,
     )
 
     class_weights = get_class_weights(y_train)
@@ -169,11 +167,11 @@ def train_model(model, X_train, y_train, save=True):
     datagen.fit(X_train)
 
     history = model.fit(
-        datagen.flow(X_train, y_train, batch_size=BATCH_SIZE, subset='training'),
-        steps_per_epoch=len(X_train) * (1 - VALIDATION_SIZE) / BATCH_SIZE,
+        datagen.flow(X_train, y_train, batch_size=BATCH_SIZE),
+        steps_per_epoch=len(X_train) / BATCH_SIZE,
         epochs=EPOCHS,
-        validation_data=datagen.flow(X_train, y_train, batch_size=BATCH_SIZE, subset='validation'),
-        validation_steps=len(X_train) * VALIDATION_SIZE / BATCH_SIZE,
+        validation_data=(X_val, y_val),
+        validation_steps=len(X_val) / BATCH_SIZE,
         callbacks=callbacks_list,
         class_weight=class_weights if USE_CLASS_WEIGHTS else None
     )
@@ -187,7 +185,7 @@ def get_saved_model():
     get_custom_objects().update(
         {"swish": layers.Activation(swish), "F1Score": get_f1_score_metric()})
     custom_objects = {"swish": swish}
-    model = load_model("saved_models/saved_model.h5", custom_objects)
+    model = load_model("saved_models_oversampled/best_val_loss.h5", custom_objects)
     history = load_history("latest")
     return model, history
 
@@ -214,18 +212,40 @@ def plot_performance(history):
     plt.show()
 
 
+def oversample(x, y):
+    image_shape = x.shape[1:]
+    flatten_size = np.product(image_shape)
+    x = x.reshape(x.shape[0], flatten_size)
+    rus = RandomOverSampler(random_state=42)
+    x, y = rus.fit_resample(x, y)
+    x = x.reshape(x.shape[0], *image_shape)
+    return x, y
+
+
 def main():
     X_data, y_data = read_file("data/skin/hmnist_28_28_RGB.csv")
     X_data = X_data.astype('float64')
 
-    X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.2,
+    X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.05,
                                                         random_state=42)
+
+    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=VALIDATION_SIZE,
+                                                      random_state=42)
+
+    # Oversample the training set.
+    X_train, y_train = oversample(X_train, y_train)
+
+    # Oversample the validation set.
+    X_val, y_val = oversample(X_val, y_val)
+
+    # Oversample the test set.
+    X_test, y_test = oversample(X_test, y_test)
 
     if USE_SAVED_MODEL:
         model, history = get_saved_model()
     else:
         model = create_model()
-        model, history = train_model(model, X_train, y_train)
+        model, history = train_model(model, X_train, y_train, X_val, y_val)
         if DEBUG:
             plot_model(model, "model.png", show_shapes=True)
 
