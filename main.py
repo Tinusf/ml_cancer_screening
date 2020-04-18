@@ -15,8 +15,8 @@ import datetime
 from imblearn.over_sampling import RandomOverSampler
 
 # Load the model saved to file instead of creating a new.
-USE_SAVED_MODEL = False
-DEBUG = False
+USE_SAVED_MODEL = True
+DEBUG = True
 # How many epochs
 EPOCHS = 1
 BATCH_SIZE = 128
@@ -94,7 +94,7 @@ def create_model():
     model.add(layers.Dense(NUMBER_OF_CLASSES))
     model.add(layers.Activation("softmax"))
     model.compile(
-        optimizer=optimizers.Adam(learning_rate=0.001),
+        optimizer=optimizers.Adam(learning_rate=0.003),
         loss="sparse_categorical_crossentropy",
         metrics=["accuracy", get_f1_score_metric()]
     )
@@ -185,7 +185,7 @@ def get_saved_model():
     get_custom_objects().update(
         {"swish": layers.Activation(swish), "F1Score": get_f1_score_metric()})
     custom_objects = {"swish": swish}
-    model = load_model("saved_models/best_val_loss.h5", custom_objects)
+    model = load_model("saved_models_oversampled/best_val_loss.h5", custom_objects)
     history = load_history("latest")
     return model, history
 
