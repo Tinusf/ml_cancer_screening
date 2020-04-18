@@ -6,12 +6,12 @@ import base64
 from PIL import Image
 import numpy
 from io import BytesIO
-import main
+from SkinCancerClassifier import SkinCancerClassifier
 
 app = Flask(__name__)
 CORS(app)
 
-model, _ = main.get_saved_model()
+skin_cancer_classifier = SkinCancerClassifier()
 
 
 def base64_to_numpy(base64string):
@@ -44,6 +44,6 @@ def format_output(predicted):
 def check_image():
     json_input_data = json.loads(request.data)
     pixels = base64_to_numpy(json_input_data["data"])
-    predicted = main.predict(model, np.array([pixels]))
+    predicted = skin_cancer_classifier.predict(np.array([pixels]))
 
     return json.dumps(format_output(predicted))
