@@ -44,7 +44,7 @@ def main():
                     'Dermatofibroma', 'Melanocytic nevi', 'Melanoma', 'Vascular skin lesions']
     print(classification_report(y_true=y_test, y_pred=y_pred, target_names=target_names))
 
-    if config.DEBUG:
+    if config.PLOT_MODEL:
         draw.plot_performance(skin_cancer_classifier.history)
 
 

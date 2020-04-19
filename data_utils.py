@@ -39,6 +39,9 @@ def read_file(file_name):
 
 
 def oversample(x, y):
+    """
+    This method oversamples the x and y so the under-represented classes gets duplicates.
+    """
     image_shape = x.shape[1:]
     flatten_size = np.product(image_shape)
     x = x.reshape(x.shape[0], flatten_size)

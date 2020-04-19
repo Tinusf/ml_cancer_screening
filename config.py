@@ -1,7 +1,6 @@
-
 # Either a string filepath or None if you want to retrain.
 WHICH_MODEL_LOAD = "best_f1.h5"
-DEBUG = True # TODO: rename
+PLOT_MODEL = True
 # How many epochs
 EPOCHS = 1
 BATCH_SIZE = 128
@@ -18,3 +17,4 @@ DROPOUT_PROB = 0.2
 FOLDER_SAVE_MODEL_PATH = "saved_models"
 
 USE_OVERSAMPLING = False
+LEARNING_RATE = 0.003
