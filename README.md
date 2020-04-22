@@ -9,8 +9,6 @@ Activate the virtualenv in linux by using the command `source venv/bin/activate`
 
 Activate the virtualenv in Windows using the command `venv/Scripts/activate`
 
-If you are running Windows 
-
 # Pip packages
 If you want to install all the necessary packages run this command:
 
