@@ -1,8 +1,10 @@
 import csv
-import numpy as np
 import pandas as pd
 import os
 from tensorflow.keras import callbacks
+import numpy as np
+from imblearn.over_sampling import RandomOverSampler
+import config
 
 
 def recreate_image(list_of_intensities):
@@ -36,20 +38,36 @@ def read_file(file_name):
     return np.array(X_data), np.array(y_data)
 
 
+def oversample(x, y):
+    """
+    This method oversamples the x and y so the under-represented classes gets duplicates.
+    """
+    image_shape = x.shape[1:]
+    flatten_size = np.product(image_shape)
+    x = x.reshape(x.shape[0], flatten_size)
+    rus = RandomOverSampler(random_state=42)
+    x, y = rus.fit_resample(x, y)
+    x = x.reshape(x.shape[0], *image_shape)
+    return x, y
+
+
 def save_history(history):
     history_df = pd.DataFrame(history.history)
 
-    if not os.path.exists("saved_models/history"):
-        os.mkdir("saved_models/history")
+    if not os.path.exists(f"{config.FOLDER_SAVE_MODEL_PATH}/history"):
+        os.mkdir(f"{config.FOLDER_SAVE_MODEL_PATH}/history")
 
     # Overwrite latest or rename all previous histories?
 
-    with open("saved_models/history/history_latest.csv", "w") as f:
+    with open(f"{config.FOLDER_SAVE_MODEL_PATH}/history/history_latest.csv", "w") as f:
         history_df.to_csv(f)
 
 
 def load_history(version="latest"):
-    file_name = "saved_models/history/history_" + version + ".csv"
+    """
+    Load the history csv file.
+    """
+    file_name = f"{config.FOLDER_SAVE_MODEL_PATH}/history/history_" + version + ".csv"
     history = dict()
     if os.path.exists(file_name):
         with open(file_name, newline="") as csvfile:
