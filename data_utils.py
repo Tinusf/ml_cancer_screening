@@ -1,7 +1,7 @@
 import csv
 import pandas as pd
 import os
-from tensorflow.keras import callbacks, optimizers
+from tensorflow.keras import callbacks
 import numpy as np
 from imblearn.over_sampling import RandomOverSampler
 import config
@@ -64,6 +64,9 @@ def save_history(history):
 
 
 def load_history(version="latest"):
+    """
+    Load the history csv file.
+    """
     file_name = f"{config.FOLDER_SAVE_MODEL_PATH}/history/history_" + version + ".csv"
     history = dict()
     if os.path.exists(file_name):

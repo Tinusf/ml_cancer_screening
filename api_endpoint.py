@@ -8,13 +8,21 @@ import numpy
 from io import BytesIO
 from SkinCancerClassifier import SkinCancerClassifier
 
+# Create a new flask app
 app = Flask(__name__)
+# Enable CORS for this API
 CORS(app)
 
+# Create a classifier instance.
 skin_cancer_classifier = SkinCancerClassifier()
 
 
 def base64_to_numpy(base64string):
+    """
+    :param base64string: The strang that should be decoded.
+    :return: A numpy array containing the image.
+    """
+    # Dimensions of the image
     dimensions = (28, 28)
 
     encoded_image = base64string.split(",")[1]
@@ -29,6 +37,11 @@ def base64_to_numpy(base64string):
 
 
 def format_output(predicted):
+    """
+    :param predicted: An array containing the probabilities of teach class.
+    :return: Formatted dictionary with the names of each class as keys and the probabilies as
+    values.
+    """
     return {
         "Actinic Keratoses": float(predicted[0]),
         "Basal cell carcinoma": float(predicted[1]),
@@ -42,8 +55,11 @@ def format_output(predicted):
 
 @app.route('/', methods=["POST"])
 def check_image():
+    # Load the payload with json.
     json_input_data = json.loads(request.data)
+    # Convert base64 data to numpy array.
     pixels = base64_to_numpy(json_input_data["data"])
-    predicted = skin_cancer_classifier.predict(np.array([pixels]))
-
+    # Get the predicted classes.
+    predicted = skin_cancer_classifier.model.predict(np.array([pixels]))
+    # Format the output.
     return json.dumps(format_output(predicted))
